@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="SynthesizedImageView">
+        <!--合成图片的背景-->
+        <attr name="synthesized_image_bg" format="color"/>
+        <!--合成图片的默认图片-->
+        <attr name="synthesized_default_image" format="reference"/>
+    </declare-styleable>
+</resources>
