@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutionException;
 
 public class TeamHeadSynthesizer implements Synthesizer {
 
-    String currentTargeID;//当前多图合成的唯一ID，用来做缓存处理，以及判断合成图片是否需要变更，如果多个url有变动，currentTargetID也会发生变动，需要重新生成
+    String currentTargetID;//当前多图合成的唯一ID，用来做缓存处理，以及判断合成图片是否需要变更，如果多个url有变动，currentTargetID也会发生变动，需要重新生成
     /**
      * 多图片数据
      */
@@ -38,20 +38,17 @@ public class TeamHeadSynthesizer implements Synthesizer {
     private int mColumnCount;  //列数
     ImageView imageView;
     int bgColor = Color.GRAY;
-
-    private int mGap; //宫格间距
+    boolean loadOk;//加载完毕
+    private int mGap = 6; //宫格间距
 
     public TeamHeadSynthesizer(Context mContext, ImageView imageView) {
         this.mContext = mContext;
         this.imageView = imageView;
-        init(mContext);
+        init();
     }
 
-    private void init(Context context) {
+    private void init() {
         multiImageData = new MultiImageData();
-        mGap = dp2px(2, context);
-        //图片合成的背景图片颜色
-        bgColor = Color.parseColor("#FFDDDDDD");
     }
 
     public int getMaxWidth() {
@@ -79,12 +76,20 @@ public class TeamHeadSynthesizer implements Synthesizer {
         return multiImageData.getDefaultImageResId();
     }
 
-    /**
-     * 根据手机的分辨率从 dp 的单位 转成为 px(像素)
-     */
-    public static int dp2px(float dpValue, Context mContext) {
-        float scale = mContext.getResources().getDisplayMetrics().density;
-        return (int) (dpValue * scale + 0.5f);
+    public int getBgColor() {
+        return bgColor;
+    }
+
+    public void setBgColor(int bgColor) {
+        this.bgColor = bgColor;
+    }
+
+    public int getGap() {
+        return mGap;
+    }
+
+    public void setGap(int mGap) {
+        this.mGap = mGap;
     }
 
     /**
@@ -251,9 +256,9 @@ public class TeamHeadSynthesizer implements Synthesizer {
      * @param targetImageSize
      * @return
      * @throws InterruptedException
-     * @throws java.util.concurrent.ExecutionException
+     * @throws ExecutionException
      */
-    private Bitmap asyncLoadImage(String imageUrl, int targetImageSize) throws InterruptedException, java.util.concurrent.ExecutionException {
+    private Bitmap asyncLoadImage(String imageUrl, int targetImageSize) throws InterruptedException, ExecutionException {
         return Glide.with(mContext)
                 .load(imageUrl)
                 .asBitmap()
@@ -263,20 +268,26 @@ public class TeamHeadSynthesizer implements Synthesizer {
     }
 
     public void load() {
+        String newTargetID = buildTargetSynthesizedId();
+        if (loadOk && null != imageView.getDrawable() && TextUtils.equals(currentTargetID, newTargetID)) {
+            //两次加载的图片是一样的，而且已经加载成功了，图片没有被回收,此时无需重复加载
+            return;
+        }
+        currentTargetID = newTargetID;
         //初始化图片信息
         int[] gridParam = calculateGridParam(multiImageData.size());
         mRowCount = gridParam[0];
         mColumnCount = gridParam[1];
         targetImageSize = (maxWidth - (mColumnCount + 1) * mGap) / (mColumnCount == 1 ? 2 : mColumnCount);//图片尺寸
-        currentTargeID = buildTargetSynthesizedId();
+        imageView.setImageResource(multiImageData.getDefaultImageResId());
         new Thread() {
             @Override
             public void run() {
                 super.run();
-                final String targetID = currentTargeID;
+                final String targetID = currentTargetID;
                 //根据id获取存储的文件路径
                 String absolutePath = mContext.getFilesDir().getAbsolutePath();
-                final File file = new File(absolutePath + File.separator + Config.dir_synthesized_image + File.separator + currentTargeID);
+                final File file = new File(absolutePath + File.separator + Config.dir_synthesized_image + File.separator + TeamHeadSynthesizer.this.currentTargetID);
                 boolean cacheBitmapExists = false;
                 if (file.exists() && file.isFile()) {
                     //文件存在，加载到内存
@@ -298,17 +309,19 @@ public class TeamHeadSynthesizer implements Synthesizer {
                         BitmapUtils.storeBitmap(file, bitmap);
                     }
                     //执行回调
+                    //判断当前图片的多个小图是否全部加载完全的，如果加载完全的，complete=true;
+                    final boolean complete = loadSuccess;
                     imageView.post(new Runnable() {
                         @Override
                         public void run() {
-                            callback.onCall(bitmap, targetID);
+                            callback.onCall(bitmap, targetID, complete);
                         }
                     });
                 } else {
                     imageView.post(new Runnable() {
                         @Override
                         public void run() {
-                            callback.onCall(file, targetID);
+                            callback.onCall(file, targetID, true);
                         }
                     });
                 }
@@ -318,14 +331,16 @@ public class TeamHeadSynthesizer implements Synthesizer {
 
     Callback callback = new Callback() {
         @Override
-        public void onCall(Object obj, String targetID) {
+        public void onCall(Object obj, String targetID, boolean complete) {
             //判断回调结果的任务id是否为同一批次的任务
-            if (!TextUtils.equals(currentTargeID, targetID)) return;
+            if (!TextUtils.equals(currentTargetID, targetID)) return;
             if (obj instanceof File) {
+                if (complete) loadOk = true;
                 Glide.with(mContext)
                         .load(((File) obj))
                         .into(imageView);
             } else if (obj instanceof Bitmap) {
+                if (complete) loadOk = true;
                 imageView.setImageBitmap(((Bitmap) obj));
             }
         }
@@ -346,7 +361,7 @@ public class TeamHeadSynthesizer implements Synthesizer {
     }
 
     interface Callback {
-        void onCall(Object object, String targetID);
+        void onCall(Object object, String targetID, boolean complete);
     }
 
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,26 +14,42 @@
         android:id="@+id/iv_merge_pic1"
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:scaleType="centerCrop"/>
+        android:scaleType="centerCrop"
+        app:synthesized_default_image="@mipmap/ic_launcher"
+        app:synthesized_image_bg="#FFDDDDDD"
+        app:synthesized_image_gap="2dp"
+        app:synthesized_image_size="120dp"/>
 
     <com.yuyin.myclass.teamhead.view.SynthesizedImageView
         android:id="@+id/iv_merge_pic2"
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:layout_marginTop="3dp"
-        android:scaleType="centerCrop"/>
+        android:scaleType="centerCrop"
+        app:synthesized_default_image="@mipmap/ic_launcher"
+        app:synthesized_image_bg="#FFDDDDDD"
+        app:synthesized_image_gap="2dp"
+        app:synthesized_image_size="120dp"/>
 
     <com.yuyin.myclass.teamhead.view.SynthesizedImageView
         android:id="@+id/iv_merge_pic3"
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:layout_marginTop="3dp"
-        android:scaleType="centerCrop"/>
+        android:scaleType="centerCrop"
+        app:synthesized_default_image="@mipmap/ic_launcher"
+        app:synthesized_image_bg="#FFDDDDDD"
+        app:synthesized_image_gap="2dp"
+        app:synthesized_image_size="120dp"/>
 
     <com.yuyin.myclass.teamhead.view.SynthesizedImageView
         android:id="@+id/iv_merge_pic4"
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:layout_marginTop="3dp"
-        android:scaleType="centerCrop"/>
+        android:scaleType="centerCrop"
+        app:synthesized_default_image="@mipmap/ic_launcher"
+        app:synthesized_image_bg="#FFDDDDDD"
+        app:synthesized_image_gap="2dp"
+        app:synthesized_image_size="120dp"/>
 </LinearLayout>
